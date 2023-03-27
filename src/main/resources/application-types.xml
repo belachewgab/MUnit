@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="Samp" format="json">
+      <types:shape format="weave" example="examples/Sample.json"><![CDATA[%dw 2.0
+
+type Samp = Array<{|  empName: String,   empPhone: String,   empEmail: String,   empSkills: String|}> {"example": "[{\\\"empName\\\":\\\"sha3\\\",\\\"empPhone\\\":\\\"65123528735\\\",\\\"empEmail\\\":\\\"shar@gmail.com\\\",\\\"empSkills\\\":\\\"SQL\\\"},{\\\"empName\\\":\\\"hoss3\\\",\\\"empPhone\\\":\\\"72048371005\\\",\\\"empEmail\\\":\\\"hoss@gmail.com\\\",\\\"empSkills\\\":\\\"phyton\\\"},{\\\"empName\\\":\\\"Arvada\\\",\\\"empPhone\\\":\\\"72033389765\\\",\\\"empEmail\\\":\\\"Arv4a@gmail.com\\\",\\\"empSkills\\\":\\\"C++\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#3b8e2b19-2933-4eda-af7f-06c51ac0dba4">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Samp"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

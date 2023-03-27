@@ -1,0 +1,21 @@
+[
+
+	{
+		"empName": "sha3",
+		"empPhone": "65123528735",
+		"empEmail": "shar@gmail.com",
+		"empSkills": "SQL"
+	},
+	{
+		"empName": "hoss3",
+		"empPhone": "72048371005",
+		"empEmail": "hoss@gmail.com",
+		"empSkills": "phyton"
+	},
+	{
+		"empName": "Arvada",
+		"empPhone": "72033389765",
+		"empEmail": "Arv4a@gmail.com",
+		"empSkills": "C++"
+	}
+]

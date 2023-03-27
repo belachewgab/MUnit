@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:workday="http://www.mulesoft.org/schema/mule/workday" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/workday http://www.mulesoft.org/schema/mule/workday/current/mule-workday.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e8c5b1d8-7727-4f1a-961b-4c3afa83e4b8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="1831afe1-f9bb-4c8a-94d2-7305ae3991ae" >
+		<salesforce:basic-connection username="henokbelachew@gmail.com" password="B0910623807$e" securityToken="g81NLBfDIcm2XHSgMyM2jxFh" />
+	</salesforce:sfdc-config>
+	<flow name="Create" doc:id="e9f207cd-eba7-4d7b-82c3-91d2cdb5467c" >
+		<http:listener doc:name="Listener" doc:id="632094e5-4bb2-49b0-9d20-91ced727edf7" config-ref="HTTP_Listener_config" path="/salesforce" allowedMethods="POST"/>
+		<ee:transform doc:name="Transform Message" doc:id="9631ee0f-eadc-42e9-8b42-eb50127571cb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map(profile, indexofprofile) -> {
+	Phone_Number__c: profile.empPhone,
+	Email__c: profile.empEmail,
+	Emp_Skills__c: profile.empSkills
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create doc:name="Create" doc:id="0d30ae67-a2fd-4c35-a200-c61ca64ac8fd" config-ref="Salesforce_Config" type="Emp_profile__c"/>
+		<ee:transform doc:name="Transform Message" doc:id="24b761d2-b06d-44b6-908b-136d8977d4f4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="Query" doc:id="75962be7-5939-49a1-8781-7d2c9a8fddd2" >
+		<http:listener doc:name="Listener" doc:id="f62223ad-951e-495c-a605-1ea6cc0d2d55" config-ref="HTTP_Listener_config" path="/skills" allowedMethods="GET"/>
+		<salesforce:query doc:name="Query" doc:id="2a5e05bf-1f80-4782-9b9f-40c1f4212970" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[select 	Name,
+        Phone_Number__c,
+        Email__c,
+        Emp_Skills__c
+from Emp_profile__c
+where Emp_Skills__c = ':Skills']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[{
+	"Skills": attributes.queryParams.Skills
+	
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="4f2be0b3-7699-43af-bed3-b3e99de5b768" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="Upsert" doc:id="d7749fad-d4db-4520-92b1-e9b8fd3fa75e" >
+		<http:listener doc:name="Listener" doc:id="ee04dd73-770d-4f02-8dc1-aa5f23056100" config-ref="HTTP_Listener_config" path="/upsert" allowedMethods="PUT"/>
+		<ee:transform doc:name="Transform Message" doc:id="3b8e2b19-2933-4eda-af7f-06c51ac0dba4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map(profile, indexofprofile) -> {
+	Name: profile.empName,
+	Phone_Number__c: profile.empPhone,
+	Email__c: profile.empEmail,
+	Emp_Skills__c: profile.empSkills
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert objectType="Emp_profile__c" externalIdFieldName="Name" doc:name="Upsert" doc:id="2ee54799-c4a3-46b7-8f0a-eb786bacbd28" config-ref="Salesforce_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="409cc6b1-fb64-4dd4-b865-f1aa70841ae5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name='DeleteAtBodyId' doc:id="5225e24d-6fa4-41a6-9f56-e54d81fb68fe" >
+		<http:listener doc:name="Listener" doc:id="58a05c39-855a-406f-ac79-806ec028f890" config-ref="HTTP_Listener_config" path="/delete"/>
+		<salesforce:delete doc:name="Delete" doc:id="79f89944-31e7-40a1-bc5c-aada8ce0004d" config-ref="Salesforce_Config">
+		</salesforce:delete>
+		<ee:transform doc:name="Transform Message" doc:id="61904200-4fec-4c7b-b11a-449d19d8cf19" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="salesforceFlow" doc:id="9adb5cb6-38d3-4308-a60d-01948419eb85" >
+		<http:listener doc:name="Listener" doc:id="bf1992d8-83a5-4d69-949c-356bcce4659a" config-ref="HTTP_Listener_config" path="/delete2"/>
+		<salesforce:delete doc:name="Delete" doc:id="6c0c8e34-a1de-4966-833b-6eda3f62a7a8" config-ref="Salesforce_Config">
+			<salesforce:ids ><![CDATA[#[attributes.queryParams.Id]]]></salesforce:ids>
+		</salesforce:delete>
+		<ee:transform doc:name="Transform Message" doc:id="8c20b720-e59d-450e-9029-f26a929b96e4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
